@@ -1,19 +1,23 @@
-import { headers } from "next/headers";
-import { RouterBtn } from "./RouterBtn";
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 /** Add your relevant code here for the issue to reproduce */
 export default function Page() {
-  const h = headers();
-  const reqUrl = h.get("x-request-url");
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const setSearchParams = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("value", (Math.random() * 1000000).toFixed());
+    router.replace(`${pathname}?${params}`);
+  }, []);
+
   return (
     <div>
       <h1>Problem Page</h1>
-      <p>
-        <kbd>x-request-url: {reqUrl}</kbd>
-      </p>
-      <RouterBtn url="/path/?query=bar" />
-      <br />
-      <RouterBtn url="/path/?query=foo" />
+      <button onClick={setSearchParams}>Set Search Params</button>
     </div>
   );
 }
