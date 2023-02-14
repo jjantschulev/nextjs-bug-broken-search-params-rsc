@@ -1,3 +1,36 @@
+# Search params are concatenated to request pathname in RSC request.
+
+I noticed that when making a request to a page with a query string, the query string is concatenated to the request pathname when examined from middleware.
+
+Ie:
+
+1. use `router.replace()` in a client component to update the query params to `/path/?value=123`
+2. middleware logs the `request.url` as '/pathvalue=123`. The trailing slash and the question mark is missing.
+   - Both `req.url` and `req.nextUrl.href` have this same issue.
+   - This issue does NOT occur in dev mode or in a local build (`yarn build` and `yarn start`). It only occurs when deployed to Vercel.
+   - This issue occurs only if the `RSC` header is sent in the request. If the `RSC` header is not sent, the request url is correct in the middleware.
+   - Hence we can observe the incorrect request url in the middleware by running `curl -v "https://nextjs-bug-broken-search-params-rsc.vercel.app/path/?value=123" -H "RSC: 1"`.
+     - This will result in the incorrect pathname of `/pathvalue=123` in the middleware.
+     - And `req.nextUrl.search` will be empty.
+   - However if we run `curl -v "https://nextjs-bug-broken-search-params-rsc.vercel.app/path/?value=123"`, the request url is correct in the middleware.
+     - This will result in the correct pathname of `/path/` in the middleware.
+     - And `req.nextUrl.search` will be `?value=123`.
+
+- To Aid in debugging I "return" the values of `req.url`, `req.nextUrl.href`, `req.nextUrl.pathname`, and `req.nextUrl.search` in the middleware by setting response headers such as `x-request-url`.
+
+To see this issue live, visit [this vercel deployment](https://nextjs-bug-broken-search-params-rsc.vercel.app/path/)
+
+The important files are:
+
+- `middleware.tsx`
+- `app/path/page.tsx`
+
+This seems like a major bug in handling of URLs and search params in RSC requests. I hope we can resolve this quickly. Please let me know if you need any more information.
+
+---
+
+### Default Issue Readme below
+
 This is a [Next.js](https://nextjs.org/) template to use when reporting a [bug in the Next.js repository](https://github.com/vercel/next.js/issues).
 
 ## Getting Started
